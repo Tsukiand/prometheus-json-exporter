@@ -1,8 +1,8 @@
 package harness
 
 import (
-	log "github.com/sirupsen/logrus"
 	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
 )
 
 type MetricRegistry struct {

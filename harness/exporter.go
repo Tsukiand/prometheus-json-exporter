@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/urfave/cli"
 )
 
@@ -85,7 +85,7 @@ func (exp *exporter) main(c *cli.Context) {
 		w.Header().Add("Location", exp.MetricsPath)
 		w.WriteHeader(http.StatusFound)
 	})
-	http.Handle(exp.MetricsPath, prometheus.Handler())
+	http.Handle(exp.MetricsPath, promhttp.Handler())
 	if err := http.ListenAndServe(fmt.Sprintf(":%d", c.Int("port")), nil); err != nil {
 		log.Fatal(err)
 	}
