@@ -35,6 +35,18 @@ var ScrapeTypes = map[string]*ScrapeType{
 		},
 		NewScraper: NewObjectScraper,
 	},
+	"singleObject": {
+		Configure: func(mapping *Mapping, reg *harness.MetricRegistry) {
+			reg.Register(
+				mapping.Name,
+				prometheus.NewGaugeVec(prometheus.GaugeOpts{
+					Name: mapping.Name,
+					Help: mapping.Help,
+				}, mapping.labelNames()),
+			)
+		},
+		NewScraper: NewSingleObjectScraper,
+	},
 	"value": {
 		Configure: func(mapping *Mapping, reg *harness.MetricRegistry) {
 			reg.Register(
