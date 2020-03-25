@@ -100,10 +100,9 @@ func NewSingleObjectScraper(mapping *Mapping) (JsonScraper, error) {
 		return nil, err
 	}	
 
-	scraper := &ValueScraper{
-		Mapping:       mapping,
-		valueJsonPath: valuepath,
-		labelJsonPaths: labelPaths
+	scraper := &SingleObjectScraper{
+		ValueScraper:   valueScraper.(*ValueScraper),
+		labelJsonPaths: labelPaths,
 	}
 	return scraper, nil
 }
