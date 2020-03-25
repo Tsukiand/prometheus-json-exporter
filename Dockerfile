@@ -21,4 +21,4 @@ RUN chmod +x ./json_exporter
 EXPOSE 7979
 #ENTRYPOINT ["./entrypoint.sh"]
 
-CMD  ./json_exporter  ${ENDPOINT_JSON} /opt/json_exporter/config.yml
+CMD  ./json_exporter /opt/json_exporter/config.yml
