@@ -2,7 +2,6 @@ package jsonexporter
 
 import (
 	"fmt"
-	"math"
 	"strconv"
 
 	"github.com/kawamuray/jsonpath" // Originally: "github.com/NickSardo/jsonpath"
