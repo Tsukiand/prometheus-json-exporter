@@ -1,3 +1,3 @@
 package jsonexporter
 
-const Version = "0.0.2"
+const Version = "1.0.0"

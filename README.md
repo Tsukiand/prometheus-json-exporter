@@ -36,25 +36,27 @@ $ cat example/data.json
 }
 
 $ cat example/config.yml
-- name: example_global_value
-  path: $.counter
-  labels:
-    environment: beta # static label
+- endpoint: http://localhost:8000/example/data.json
+  mappings:
+    - name: example_global_value
+      path: $.counter
+      labels:
+        environment: beta # static label
 
-- name: example_value
-  type: object
-  path: $.values[*]?(@.state == "ACTIVE")
-  labels:
-    environment: beta # static label
-    id: $.id          # dynamic label
-  values:
-    active: 1      # static value
-    count: $.count # dynamic value
+    - name: example_value
+      type: object
+      path: $.values[*]?(@.state == "ACTIVE")
+      labels:
+        environment: beta # static label
+        id: $.id          # dynamic label
+      values:
+        active: 1      # static value
+        count: $.count # dynamic value
 
 $ python -m SimpleHTTPServer 8000 &
 Serving HTTP on 0.0.0.0 port 8000 ...
 
-$ ./json_exporter http://localhost:8000/example/data.json example/config.yml &
+$ ./json_exporter example/config.yml &
 INFO[2016-02-08T22:44:38+09:00] metric registered;name:<example_global_value>
 INFO[2016-02-08T22:44:38+09:00] metric registered;name:<example_value_active>
 INFO[2016-02-08T22:44:38+09:00] metric registered;name:<example_value_count>

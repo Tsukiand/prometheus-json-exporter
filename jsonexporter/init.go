@@ -8,35 +8,41 @@ import (
 	"github.com/urfave/cli"
 )
 
+type Module struct {
+	endpoint  string
+	headers   map[string]string
+	scrapers  []JsonScraper
+}
+
 type ScrapeType struct {
-	Configure  func(*Config, *harness.MetricRegistry)
-	NewScraper func(*Config) (JsonScraper, error)
+	Configure  func(*Mapping, *harness.MetricRegistry)
+	NewScraper func(*Mapping) (JsonScraper, error)
 }
 
 var ScrapeTypes = map[string]*ScrapeType{
 	"object": {
-		Configure: func(config *Config, reg *harness.MetricRegistry) {
-			for subName := range config.Values {
-				name := harness.MakeMetricName(config.Name, subName)
+		Configure: func(mapping *Mapping, reg *harness.MetricRegistry) {
+			for subName := range mapping.Values {
+				name := harness.MakeMetricName(mapping.Name, subName)
 				reg.Register(
 					name,
 					prometheus.NewGaugeVec(prometheus.GaugeOpts{
 						Name: name,
-						Help: config.Help + " - " + subName,
-					}, config.labelNames()),
+						Help: mapping.Help + " - " + subName,
+					}, mapping.labelNames()),
 				)
 			}
 		},
 		NewScraper: NewObjectScraper,
 	},
 	"value": {
-		Configure: func(config *Config, reg *harness.MetricRegistry) {
+		Configure: func(mapping *Mapping, reg *harness.MetricRegistry) {
 			reg.Register(
-				config.Name,
+				mapping.Name,
 				prometheus.NewGaugeVec(prometheus.GaugeOpts{
-					Name: config.Name,
-					Help: config.Help,
-				}, config.labelNames()),
+					Name: mapping.Name,
+					Help: mapping.Help,
+				}, mapping.labelNames()),
 			)
 		},
 		NewScraper: NewValueScraper,
@@ -48,34 +54,37 @@ var DefaultScrapeType = "value"
 func Init(c *cli.Context, reg *harness.MetricRegistry) (harness.Collector, error) {
 	args := c.Args()
 
-	if len(args) < 2 {
+	if len(args) < 1 {
 		cli.ShowAppHelp(c)
 		return nil, fmt.Errorf("not enough arguments")
 	}
 
 	var (
-		endpoint   = args[0]
-		configPath = args[1]
+		configPath = args[0]
 	)
 
-	configs, err := loadConfig(configPath)
+	moduleConfigs, err := loadConfig(configPath)
 	if err != nil {
 		return nil, err
 	}
 
-	scrapers := make([]JsonScraper, len(configs))
-	for i, config := range configs {
-		tpe := ScrapeTypes[config.Type]
-		if tpe == nil {
-			return nil, fmt.Errorf("unknown scrape type;type:<%s>", config.Type)
+	modules := make([]*Module, len(moduleConfigs))
+	for i, moduleConfig := range moduleConfigs {
+        modules[i] = &Module{endpoint: moduleConfig.Endpoint, headers: moduleConfig.Headers}
+		modules[i].scrapers = make([]JsonScraper, len(moduleConfig.Mappings))
+		for j, mapping := range moduleConfig.Mappings {
+			tpe := ScrapeTypes[mapping.Type]
+			if tpe == nil {
+				return nil, fmt.Errorf("unknown scrape type;type:<%s>", mapping.Type)
+			}
+			tpe.Configure(mapping, reg)
+			scraper, err := tpe.NewScraper(mapping)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create scraper;name:<%s>,err:<%s>", mapping.Name, err)
+			}
+			modules[i].scrapers[j] = scraper
 		}
-		tpe.Configure(config, reg)
-		scraper, err := tpe.NewScraper(config)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create scraper;name:<%s>,err:<%s>", config.Name, err)
-		}
-		scrapers[i] = scraper
 	}
 
-	return NewCollector(endpoint, scrapers), nil
+	return NewCollector(modules), nil
 }
