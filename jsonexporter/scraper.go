@@ -193,8 +193,8 @@ func (sobsc *SingleObjectScraper) Scrape(data []byte, reg *harness.MetricRegistr
 			}
 			labels[name] = string(value)
 		}
-		log.Debugf("metric updated;name:<%s>,labels:<%s>,value:<%.2f>", sobsc.Name, sobsc.Labels, value)
-		reg.Get(sobsc.Name).(*prometheus.GaugeVec).With(sobsc.Labels).Set(value)
+		log.Debugf("metric updated;name:<%s>,labels:<%s>,value:<%.2f>", sobsc.Name, labels, value)
+		reg.Get(sobsc.Name).(*prometheus.GaugeVec).With(labels).Set(value)
 	})
 }
 
