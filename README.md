@@ -52,6 +52,14 @@ $ cat example/config.yml
       values:
         active: 1      # static value
         count: $.count # dynamic value
+- endpoint: http://localhost:8000/example/data.json
+  mappings:
+    - name: example_value
+      type: singleObject
+      path: $.values
+      labels:
+        environment: beta # static label
+        id: $.id          # dynamic label
 
 $ python -m SimpleHTTPServer 8000 &
 Serving HTTP on 0.0.0.0 port 8000 ...
