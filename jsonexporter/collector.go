@@ -72,11 +72,20 @@ func (module *Module) fetchJson() ([]byte, error) {
 }
 
 func (col *Collector) Collect(reg *harness.MetricRegistry) {
+	var flag bool
+	flag = false
     for _, module := range col.modules {
         json, err := module.fetchJson()
+
         if err != nil {
             log.Error(err)
-            return
+            continue
+        } else {
+        	flag = true
+        }
+
+        if !flag {
+        	return
         }
 
         for _, scraper := range module.scrapers {
