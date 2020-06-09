@@ -3,6 +3,7 @@ package jsonexporter
 import (
 	"fmt"
 	"strconv"
+	"math"
 
 	"github.com/kawamuray/jsonpath" // Originally: "github.com/NickSardo/jsonpath"
 	"github.com/prometheus/client_golang/prometheus"
@@ -65,13 +66,29 @@ func (vs *ValueScraper) Scrape(data []byte, reg *harness.MetricRegistry) error {
 		}
 		isFirst = false
 
-		if result.Type != jsonpath.JsonNumber {
+		var value float64
+		var boolValue bool
+		var err error
+		switch result.Type{
+		case jsonpath.JsonNumber:
+			value, err = vs.parseValue(result.Value)
+		case jsonpath.JsonString:
+			// If it is a string, lets pull off the quotes and attempt to parse it as a number
+			value, err = vs.parseValue(result.Value[1 : len(result.Value)-1])
+		case jsonpath.JsonNull:
+			value = math.NaN()
+		case jsonpath.JsonBool:
+			if boolValue, err = strconv.ParseBool(string(result.Value)); boolValue {
+				value = 1
+			} else {
+				value = 0
+			}
+		default:
 			log.Warnf("skipping not numerical result;path:<%s>,value:<%s>",
 				vs.valueJsonPath, result.Value)
 			return
 		}
-
-		value, err := vs.parseValue(result.Value)
+		
 		if err != nil {
 			// Should never happen.
 			log.Errorf("could not parse numerical value as float;path:<%s>,value:<%s>",
