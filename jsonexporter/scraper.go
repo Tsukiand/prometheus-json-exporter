@@ -305,7 +305,6 @@ func (obsc *ObjectScraper) Scrape(data []byte, reg *harness.MetricRegistry) erro
 
 				var value float64
 				var boolValue bool
-				var err error
 				switch firstResult.Type {
 				case jsonpath.JsonNumber:
 					value, err = obsc.parseValue(firstResult.Value)
