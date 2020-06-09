@@ -2,6 +2,7 @@ package jsonexporter
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"math"
 
@@ -66,31 +67,13 @@ func (vs *ValueScraper) Scrape(data []byte, reg *harness.MetricRegistry) error {
 		}
 		isFirst = false
 
-		var value float64
-		var boolValue bool
-		var err error
-		switch result.Type{
-		case jsonpath.JsonNumber:
-			value, err = vs.parseValue(result.Value)
-		case jsonpath.JsonString:
-			// If it is a string, lets pull off the quotes and attempt to parse it as a number
-			value, err = vs.parseValue(result.Value[1 : len(result.Value)-1])
-		case jsonpath.JsonNull:
-			value = math.NaN()
-		case jsonpath.JsonBool:
-			log.Warnf("result;path:<%s>,value:<%s>",
-				vs.valueJsonPath, result.Value)
-			if boolValue, err = strconv.ParseBool(string(result.Value)); boolValue {
-				value = 1
-			} else {
-				value = 0
-			}
-		default:
+		if result.Type != jsonpath.JsonNumber {
 			log.Warnf("skipping not numerical result;path:<%s>,value:<%s>",
 				vs.valueJsonPath, result.Value)
 			return
 		}
 
+		value, err := vs.parseValue(result.Value)
 		if err != nil {
 			// Should never happen.
 			log.Errorf("could not parse numerical value as float;path:<%s>,value:<%s>",
@@ -312,13 +295,35 @@ func (obsc *ObjectScraper) Scrape(data []byte, reg *harness.MetricRegistry) erro
 					continue
 				}
 
-				if firstResult.Type != jsonpath.JsonNumber {
-					log.Warnf("skipping not numerical result;path:<%s>,value:<%s>",
+				//if firstResult.Type != jsonpath.JsonNumber {
+				//	log.Warnf("skipping not numerical result;path:<%s>,value:<%s>",
+				//		obsc.valueJsonPath, result.Value)
+				//	continue
+				//}
+				//
+				//value, err := obsc.parseValue(firstResult.Value)
+
+				var value float64
+				var boolValue bool
+				var err error
+				switch firstResult.Type {
+				case jsonpath.JsonNumber:
+					value, err = obsc.parseValue(firstResult.Value)
+				case jsonpath.JsonNull:
+					value = math.NaN()
+				case jsonpath.JsonBool:
+					if boolValue, err = strconv.ParseBool(string(firstResult.Value)); boolValue {
+						value = 1
+					} else {
+						value = 0
+					}
+				default:
+					log.Warnf("skipping not numerical result;path:<%v>,value:<%s>",
 						obsc.valueJsonPath, result.Value)
 					continue
 				}
 
-				value, err := obsc.parseValue(firstResult.Value)
+
 				if err != nil {
 					// Should never happen.
 					log.Errorf("could not parse numerical value as float;path:<%s>,value:<%s>",
