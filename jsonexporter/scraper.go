@@ -78,6 +78,8 @@ func (vs *ValueScraper) Scrape(data []byte, reg *harness.MetricRegistry) error {
 		case jsonpath.JsonNull:
 			value = math.NaN()
 		case jsonpath.JsonBool:
+			log.Warnf("result;path:<%s>,value:<%s>",
+				vs.valueJsonPath, result.Value)
 			if boolValue, err = strconv.ParseBool(string(result.Value)); boolValue {
 				value = 1
 			} else {
@@ -88,7 +90,7 @@ func (vs *ValueScraper) Scrape(data []byte, reg *harness.MetricRegistry) error {
 				vs.valueJsonPath, result.Value)
 			return
 		}
-		
+
 		if err != nil {
 			// Should never happen.
 			log.Errorf("could not parse numerical value as float;path:<%s>,value:<%s>",
