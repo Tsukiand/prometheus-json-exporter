@@ -19,6 +19,7 @@ type Mapping struct {
 	Type   string              `yaml:type`
 	Help   string              `yaml:help`
 	Values map[string]string   `yaml:values`
+	Positive string            `yaml:positive`
 }
 
 func (mapping *Mapping) labelNames() []string {

@@ -61,6 +61,16 @@ $ cat example/config.yml
         environment: beta # static label
         id: $.id          # dynamic label
 
+- endpoint: http://localhost:8000/example/data.json
+  mappings:
+    - name: postive_negative_status
+      type: singleObject
+      path: $.status
+      positive: online
+      labels:
+        environment: beta # static label
+        id: $.id          # dynamic label
+
 $ python -m SimpleHTTPServer 8000 &
 Serving HTTP on 0.0.0.0 port 8000 ...
 
@@ -76,6 +86,8 @@ example_value_active{environment="beta",id="id-A"} 1
 example_value_active{environment="beta",id="id-C"} 1
 example_value_count{environment="beta",id="id-A"} 1
 example_value_count{environment="beta",id="id-C"} 3
+postive_negative_status{environment="beat", id="id-D"} 1
+postive_negative_status{environment="beat", id="id-E"} 0
 ```
 
 See Also

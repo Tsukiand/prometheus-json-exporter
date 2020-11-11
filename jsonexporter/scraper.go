@@ -121,6 +121,7 @@ func (sobsc *SingleObjectScraper) newLabels() map[string]string {
 
 func (sobsc *SingleObjectScraper) parseValue(bytes []byte) (float64, error) {
 	value, err := strconv.ParseFloat(string(bytes), 64)
+	//value, err := strconv.ParseFloat(string(bytes), 64)
 	if err != nil {
 		return -1.0, fmt.Errorf("failed to parse value as float;value:<%s>", bytes)
 	}
@@ -166,13 +167,21 @@ func (sobsc *SingleObjectScraper) Scrape(data []byte, reg *harness.MetricRegistr
 		}
 		isFirst = false
 
-		if result.Type != jsonpath.JsonNumber {
-			log.Warnf("skipping not numerical result;path:<%s>,value:<%s>",
+		if !(result.Type == jsonpath.JsonNumber || (sobsc.Positive != "" && result.Type == jsonpath.JsonString)) {
+			log.Warnf("skipping not numerical/string result;path:<%s>,value:<%s>",
 				sobsc.valueJsonPath, result.Value)
 			return
 		}
 
-		value, err := sobsc.parseValue(result.Value)
+		value := result.Value
+		if sobsc.Positive != "" && result.Type == jsonpath.JsonString {
+			if sobsc.Positive == result.Value {
+				value = "1"
+			} else {
+				value = "0"
+			}
+		}
+		value, err := sobsc.parseValue(value)
 		if err != nil {
 			// Should never happen.
 			log.Errorf("could not parse numerical value as float;path:<%s>,value:<%s>",
@@ -315,6 +324,8 @@ func (obsc *ObjectScraper) Scrape(data []byte, reg *harness.MetricRegistry) erro
 					} else {
 						value = 0
 					}
+				//case jsonpath.JsonString:
+				//	value, err = obsc.parseStrValue(string(firstResult.Value))
 				default:
 					log.Warnf("skipping not numerical result;path:<%v>,value:<%s>",
 						obsc.valueJsonPath, result.Value)
