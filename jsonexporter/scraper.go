@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 
 	"github.com/kawamuray/jsonpath" // Originally: "github.com/NickSardo/jsonpath"
 	"github.com/prometheus/client_golang/prometheus"
@@ -173,15 +174,15 @@ func (sobsc *SingleObjectScraper) Scrape(data []byte, reg *harness.MetricRegistr
 			return
 		}
 
-		value := result.Value
+		tmpValue := result.Value
 		if sobsc.Positive != "" && result.Type == jsonpath.JsonString {
-			if sobsc.Positive == result.Value {
-				value = "1"
+			if sobsc.Positive == strings.Replace(string(tmpValue), "\"", "", -1) {
+				tmpValue = []byte("1")
 			} else {
-				value = "0"
+				tmpValue = []byte("0")
 			}
 		}
-		value, err := sobsc.parseValue(value)
+		value, err := sobsc.parseValue(tmpValue)
 		if err != nil {
 			// Should never happen.
 			log.Errorf("could not parse numerical value as float;path:<%s>,value:<%s>",
